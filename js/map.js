@@ -37,16 +37,21 @@ async function initMap() {
     return;
   }
 
-  const map = L.map("map").setView(players[0].location, 13);
+  const [lat, lon] = players[0].location;
+  const map = L.map("map").setView([lat, lon], 13);
+
+
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
 
   players.forEach((player) => {
-    const marker = L.marker(player.location).addTo(map);
-    marker.bindPopup(`${player.name} (${player.role})`).openPopup();
-  });
+  const [lat, lon] = player.location;
+  const marker = L.marker([lat, lon]).addTo(map);
+  marker.bindPopup(`${player.name} (${player.role})`);
+});
+
 }
 
 initMap();
