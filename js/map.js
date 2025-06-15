@@ -13,23 +13,39 @@ async function loadMapData(role) {
 }
 
 async function initMap() {
-  const role = getRoleFromURL();
-  if (!role) {
-    alert("Роль не указана. Используйте ?role=seeker или ?role=hider");
+  const urlParams = new URLSearchParams(window.location.search);
+  const role = urlParams.get("role");
+
+  if (!role || (role !== "seeker" && role !== "hider")) {
+    alert("Укажите роль в URL, например ?role=seeker");
     return;
   }
 
-  const data = await loadMapData(role);
+  const dataUrl = `data/${role}.json`;
 
-  const map = L.map("map").setView([55.75, 37.6], 11); // Москва
+  let response;
+  try {
+    response = await fetch(dataUrl);
+  } catch (error) {
+    console.error("Ошибка загрузки данных:", error);
+    return;
+  }
+
+  const players = await response.json();
+  if (!players.length) {
+    alert("Нет данных для отображения");
+    return;
+  }
+
+  const map = L.map("map").setView(players[0].location, 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; OSM contributors'
+    attribution: "© OpenStreetMap contributors",
   }).addTo(map);
 
-  data.forEach(({ lat, lon, name, role }) => {
-    const marker = L.marker([lat, lon]).addTo(map);
-    marker.bindPopup(`${name} (${role})`);
+  players.forEach((player) => {
+    const marker = L.marker(player.location).addTo(map);
+    marker.bindPopup(`${player.name} (${player.role})`).openPopup();
   });
 }
 
