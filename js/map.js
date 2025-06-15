@@ -3,55 +3,48 @@ function getRoleFromURL() {
   return params.get("role"); // seeker или hider
 }
 
-async function loadMapData(role) {
-  const response = await fetch(`./data/${role}.json`);
-  if (!response.ok) {
-    alert("Не удалось загрузить карту для роли: " + role);
-    return [];
-  }
-  return await response.json();
-}
-
 async function initMap() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const role = urlParams.get("role");
+  const role = getRoleFromURL();
 
   if (!role || (role !== "seeker" && role !== "hider")) {
     alert("Укажите роль в URL, например ?role=seeker");
     return;
   }
 
-  const dataUrl = `data/${role}.json`;
+  // Принудительная загрузка свежего файла
+  const dataUrl = `data/${role}.json?ts=${Date.now()}`;
 
-  let response;
+  let players = [];
   try {
-    response = await fetch(dataUrl);
+    const response = await fetch(dataUrl);
+    if (response.ok) {
+      players = await response.json();
+    }
   } catch (error) {
     console.error("Ошибка загрузки данных:", error);
-    return;
   }
 
-  const players = await response.json();
-  if (!players.length) {
-    alert("Нет данных для отображения");
-    return;
-  }
+  // Координаты по умолчанию (Москва)
+  const defaultLat = 55.75;
+  const defaultLon = 37.61;
 
-  const [lat, lon] = players[0].location;
-  const map = L.map("map").setView([lat, lon], 13);
-
-
+  const map = L.map("map").setView(
+    players.length ? players[0].location : [defaultLat, defaultLon],
+    13
+  );
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
 
+  // Добавляем маркеры, если есть данные
   players.forEach((player) => {
-  const [lat, lon] = player.location;
-  const marker = L.marker([lat, lon]).addTo(map);
-  marker.bindPopup(`${player.name} (${player.role})`);
-});
-
+    if (player.location && player.location.length === 2) {
+      const [lat, lon] = player.location;
+      const marker = L.marker([lat, lon]).addTo(map);
+      marker.bindPopup(`${player.name} (${player.role})`);
+    }
+  });
 }
 
 initMap();
