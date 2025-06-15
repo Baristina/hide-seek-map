@@ -1,4 +1,1 @@
-[
-  { "lat": 55.76, "lon": 37.64, "name": "Искатель 1", "role": "seeker" },
-  { "lat": 55.35, "lon": 37.61, "name": "Искатель 2", "role": "seeker" }
-]
+[{"name": "Mitrukhin", "role": "seeker", "location": [55.759896, 37.703752]}]
